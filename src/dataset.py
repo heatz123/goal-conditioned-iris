@@ -5,9 +5,10 @@ import random
 from typing import Dict, List, Optional, Tuple
 
 import psutil
+import numpy as np
 import torch
 
-from episode import Episode
+from episode import Episode, EnvEpisode
 
 Batch = Dict[str, torch.Tensor]
 
@@ -122,6 +123,30 @@ class EpisodesDataset:
             self.episode_id_to_queue_idx[episode_id] = len(self.episodes)
             self.episodes.append(episode)
 
+    def load_custom_trajectories(self, directory: Path) -> None:
+        assert directory.is_dir() and len(self.episodes) == 0
+        episode_files = sorted([p for p in directory.iterdir()])
+        self.num_seen_episodes = len(episode_files)
+        for episode_id, episode_file in enumerate(episode_files):
+            raw_episode = torch.load(f'{episode_file}')
+
+            observations = [o[None] for o in raw_episode["observations"]]
+            actions = raw_episode["actions"]
+            rewards = raw_episode["rewards"]
+            dones = raw_episode["dones"]
+            for i, (o, a, r, d) in enumerate(zip(*map(lambda arr: np.swapaxes(arr, 0, 1), [observations, actions, rewards, dones]))):  # Make everything (N, T, ...) instead of (T, N, ...)
+                states = raw_episode["states"]
+                episode = EnvEpisode(
+                    observations=torch.ByteTensor(o).permute(0, 3, 1, 2).contiguous(),  # channel-first
+                    actions=torch.LongTensor(a),
+                    rewards=torch.FloatTensor(r),
+                    ends=torch.LongTensor(d),
+                    mask_padding=torch.ones(d.shape[0], dtype=torch.bool),
+                    states=states
+                )
+                
+                self.add_episode(episode)
+                
 
 class EpisodesDatasetRamMonitoring(EpisodesDataset):
     """

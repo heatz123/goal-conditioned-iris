@@ -30,6 +30,9 @@ while [ "$1" != "" ]; do
         -w | --world-model )
             mode="play_in_world_model"
             ;;
+        -k | --player-save-env )
+            mode="player_save_env"
+            ;;
         * )
             echo Invalid usage : $1
             exit 1

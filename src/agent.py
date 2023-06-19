@@ -26,7 +26,7 @@ class Agent(nn.Module):
         if load_tokenizer:
             self.tokenizer.load_state_dict(extract_state_dict(agent_state_dict, 'tokenizer'))
         if load_world_model:
-            self.world_model.load_state_dict(extract_state_dict(agent_state_dict, 'world_model'))
+            self.world_model.load_state_dict(extract_state_dict(agent_state_dict, 'world_model'), strict=False)
         if load_actor_critic:
             self.actor_critic.load_state_dict(extract_state_dict(agent_state_dict, 'actor_critic'))
 

@@ -74,3 +74,14 @@ class Episode:
 
     def save(self, path: Path) -> None:
         torch.save(self.__dict__, path)
+
+from typing import Any
+@dataclass
+class EnvEpisode(Episode):  # Note that ExtendedEpisode inherits from Episode
+    states: Any  # Replace `Any` with the actual type of your new member
+
+    def __post_init__(self):
+        super().__post_init__()  # Call the parent class's post_init method
+
+        # Add your own assertions and initialization related to new_member here
+
